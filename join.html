@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-color: #1f2937;
+            --text-light: #6b7280;
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --card-border: rgba(255, 255, 255, 0.6);
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --error-color: #ef4444;
+            --success-color: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            /* Deep, stylish gradient base matching login */
+            background: radial-gradient(circle at center, #2b32b2, #1488cc);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        /* Canvas for Particle Background */
+        #particle-canvas {
+            position: fixed; /* Fixed to cover scrollable areas if needed */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .signup-container {
+            position: relative;
+            z-index: 10;
+            background-color: var(--card-bg);
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            border: 1px solid var(--card-border);
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.2),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+            width: 100%;
+            max-width: 450px; /* Slightly wider than login for more fields */
+            text-align: center;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            will-change: transform;
+            margin: 2rem 0; /* Add vertical margin for small screens */
+        }
+
+        .signup-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 1.5rem;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        h2 {
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        /* Input Styling */
+        .input-group {
+            margin-bottom: 1.25rem; /* Slightly tighter spacing */
+            text-align: left;
+            position: relative;
+        }
+
+        .input-wrapper {
+            position: relative;
+            height: 52px;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            height: 100%;
+            padding: 1.25rem 2.5rem 0.25rem 3rem;
+            background: var(--input-bg);
+            border: 2px solid transparent;
+            border-radius: 0.75rem;
+            font-size: 0.95rem;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        }
+
+        .input-wrapper input.error {
+            border-color: var(--error-color);
+        }
+        
+        .input-wrapper input.success {
+            border-color: var(--success-color);
+        }
+
+        .input-wrapper .icon {
+            position: absolute;
+            left: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 1rem;
+            transition: 0.3s;
+            pointer-events: none;
+        }
+
+        .input-wrapper input:focus ~ .icon {
+            color: var(--primary-color);
+        }
+
+        .input-wrapper label {
+            position: absolute;
+            left: 3rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-size: 0.95rem;
+            pointer-events: none;
+            transition: 0.25s ease all;
+            transform-origin: left top;
+        }
+
+        .input-wrapper input:focus ~ label,
+        .input-wrapper input:not(:placeholder-shown) ~ label {
+            top: 10px;
+            transform: translateY(0) scale(0.75);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-link {
+            margin-top: 2rem;
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+
+        .login-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Password Strength Indicator */
+        .password-strength {
+            height: 4px;
+            width: 100%;
+            background: #e5e7eb;
+            margin-top: 0.5rem;
+            border-radius: 2px;
+            overflow: hidden;
+            transition: all 0.3s;
+            display: none; /* Hidden until typing */
+        }
+        
+        .strength-bar {
+            height: 100%;
+            width: 0;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        /* Message Box */
+        #message-box {
+            height: 0;
+            overflow: hidden;
+            transition: height 0.3s ease, margin-top 0.3s ease;
+            text-align: left;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        #message-box.visible {
+            height: auto;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border: 1px solid transparent;
+        }
+
+        .success-msg { background-color: #ecfdf5; color: #065f46; border-color: #a7f3d0 !important; }
+        .error-msg { background-color: #fef2f2; color: #991b1b; border-color: #fecaca !important; }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="signup-container" id="signupCard">
+        <div class="logo-icon">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <h2>Create Account</h2>
+        <p class="subtitle">Join us and start your journey today</p>
+
+        <form id="signupForm" novalidate>
+            
+            <!-- Full Name -->
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <input type="text" id="fullname" required placeholder=" " autocomplete="name">
+                    <label for="fullname">Full Name</label>
+                    <i class="fas fa-user icon"></i>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <input type="email" id="email" required placeholder=" " autocomplete="email">
+                    <label for="email">Email Address</label>
+                    <i class="fas fa-envelope icon"></i>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <input type="password" id="password" required placeholder=" " autocomplete="new-password">
+                    <label for="password">Password</label>
+                    <i class="fas fa-lock icon"></i>
+                </div>
+                <div class="password-strength" id="strengthContainer">
+                    <div class="strength-bar" id="strengthBar"></div>
+                </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <input type="password" id="confirmPassword" required placeholder=" " autocomplete="new-password">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <i class="fas fa-check-circle icon"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <span class="btn-text">Create Account</span>
+                <div class="spinner"></div>
+            </button>
+            
+            <div id="message-box"></div>
+        </form>
+
+        <!-- Linked Login Page Here -->
+        <p class="login-link">
+            Already have an account? <a href="login.html">Login here</a>
+        </p>
+    </div>
+
+    <script>
+        /**
+         * 1. 3D TILT EFFECT (Same as Login)
+         */
+        const card = document.getElementById('signupCard');
+
+        document.addEventListener('mousemove', (e) => {
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+        
+        document.addEventListener('mouseleave', () => {
+             card.style.transform = `rotateY(0deg) rotateX(0deg)`;
+             card.style.transition = 'all 0.5s ease';
+        });
+
+        document.addEventListener('mouseenter', () => {
+             card.style.transition = 'none';
+        });
+
+        /**
+         * 2. PARTICLE BACKGROUND (Shared Logic)
+         */
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particlesArray;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.directionX = (Math.random() * 0.4) - 0.2;
+                this.directionY = (Math.random() * 0.4) - 0.2;
+                this.size = Math.random() * 2 + 1;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
+                if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) + 
+                                   ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    if (distance < (canvas.width/7) * (canvas.height/7)) {
+                        opacityValue = 1 - (distance / 20000);
+                        ctx.strokeStyle = 'rgba(255, 255, 255,' + opacityValue * 0.15 + ')';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateParticles() {
+            requestAnimationFrame(animateParticles);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            connect();
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        initParticles();
+        animateParticles();
+
+        /**
+         * 3. SIGNUP LOGIC
+         */
+        const form = document.getElementById('signupForm');
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirmPassword');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthContainer = document.getElementById('strengthContainer');
+        const messageBox = document.getElementById('message-box');
+        const submitBtn = document.getElementById('submitBtn');
+        const spinner = submitBtn.querySelector('.spinner');
+        const btnText = submitBtn.querySelector('.btn-text');
+
+        // Password Strength Indicator
+        password.addEventListener('input', function() {
+            const val = this.value;
+            strengthContainer.style.display = 'block';
+            let strength = 0;
+            
+            if (val.length >= 6) strength += 25;
+            if (val.match(/[a-z]/) && val.match(/[A-Z]/)) strength += 25;
+            if (val.match(/\d/)) strength += 25;
+            if (val.match(/[^a-zA-Z\d]/)) strength += 25;
+
+            strengthBar.style.width = strength + '%';
+            
+            if (strength <= 25) strengthBar.style.backgroundColor = '#ef4444';
+            else if (strength <= 50) strengthBar.style.backgroundColor = '#f59e0b';
+            else if (strength <= 75) strengthBar.style.backgroundColor = '#3b82f6';
+            else strengthBar.style.backgroundColor = '#10b981';
+        });
+
+        // Form Submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            messageBox.classList.remove('visible');
+            card.classList.remove('shake');
+            password.classList.remove('error');
+            confirmPassword.classList.remove('error');
+
+            void card.offsetWidth; // Trigger reflow
+
+            const pwVal = password.value;
+            const confirmVal = confirmPassword.value;
+            const nameVal = document.getElementById('fullname').value;
+            const emailVal = document.getElementById('email').value;
+
+            // Simple Validation
+            if (!nameVal || !emailVal || !pwVal) {
+                showError('Please fill in all fields.');
+                return;
+            }
+
+            if (pwVal !== confirmVal) {
+                confirmPassword.classList.add('error');
+                showError('Passwords do not match.');
+                return;
+            }
+
+            if (pwVal.length < 6) {
+                password.classList.add('error');
+                showError('Password must be at least 6 characters.');
+                return;
+            }
+
+            // Success Logic & LocalStorage Saving
+            btnText.style.display = 'none';
+            spinner.style.display = 'block';
+            submitBtn.disabled = true;
+
+            // Save user data to localStorage (demo purposes only)
+            const userData = {
+                name: nameVal,
+                email: emailVal,
+                password: pwVal
+            };
+            localStorage.setItem('demoUser', JSON.stringify(userData));
+
+            setTimeout(() => {
+                showSuccess('Account created! Redirecting to login...');
+                
+                setTimeout(() => {
+                    // Redirect to login page
+                    window.location.href = 'login.html';
+                }, 1500);
+            }, 2000);
+        });
+
+        function showError(msg) {
+            card.classList.add('shake');
+            messageBox.innerText = msg;
+            messageBox.className = 'error-msg visible';
+        }
+
+        function showSuccess(msg) {
+            messageBox.innerText = msg;
+            messageBox.className = 'success-msg visible';
+        }
+
+        card.addEventListener('animationend', () => {
+            card.classList.remove('shake');
+        });
+    </script>
+</body>
+</html>

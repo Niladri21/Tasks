@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-color: #1f2937;
+            --text-light: #6b7280;
+            --card-bg: rgba(255, 255, 255, 0.65);
+            --card-border: rgba(255, 255, 255, 0.4);
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --danger-color: #ef4444;
+            --success-color: #10b981;
+            --warning-bg: rgba(254, 243, 199, 0.9);
+            --warning-text: #92400e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #2b32b2, #1488cc);
+            min-height: 100vh;
+            padding: 2rem;
+            position: relative;
+            color: var(--text-color);
+        }
+
+        /* Particle Background */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Dashboard Container */
+        .dashboard-container {
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: var(--text-color);
+        }
+
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        /* Missed Items Banner (New Feature) */
+        .missed-container {
+            display: none; /* Hidden by default */
+            background: var(--warning-bg);
+            border-left: 5px solid #f59e0b;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .missed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(146, 64, 14, 0.1);
+        }
+
+        .missed-title {
+            color: var(--warning-text);
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .close-missed-btn {
+            background: transparent;
+            border: none;
+            color: var(--warning-text);
+            cursor: pointer;
+            font-size: 1.1rem;
+            opacity: 0.7;
+        }
+        .close-missed-btn:hover { opacity: 1; }
+
+        .missed-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .missed-item {
+            background: rgba(255,255,255,0.5);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            color: #78350f;
+        }
+
+        .missed-date-badge {
+            font-size: 0.75rem;
+            background: rgba(245, 158, 11, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* Grid Layout */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tile Styles */
+        .tile {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 400px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .tile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .tile-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .tile-title i { color: var(--primary-color); }
+
+        .add-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .add-btn:hover { background: var(--primary-hover); }
+
+        /* Tile 1: Calendar Specifics */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .month-nav {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            padding: 5px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+
+        .calendar-day-name {
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            padding: 5px 0;
+        }
+
+        .calendar-day {
+            padding: 10px;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .calendar-day:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .calendar-day.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4);
+        }
+        
+        .calendar-day.has-data::after {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 4px;
+            background-color: var(--success-color);
+            border-radius: 50%;
+            margin: 2px auto 0;
+        }
+        
+        .calendar-day.active.has-data::after {
+            background-color: white;
+        }
+
+        /* Lists (Events/Tasks) */
+        .list-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .list-item {
+            background: rgba(255,255,255,0.5);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Checkbox Style */
+        .task-checkbox {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 4px;
+            margin-right: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .task-checkbox:checked {
+            background: var(--primary-color);
+        }
+
+        .task-checkbox:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            font-size: 12px;
+        }
+
+        .task-text { flex-grow: 1; }
+        .task-checkbox:checked ~ .task-text {
+            text-decoration: line-through;
+            color: var(--text-light);
+        }
+
+        /* Notes Area */
+        .notes-area {
+            width: 100%;
+            height: 100%;
+            flex-grow: 1;
+            background: rgba(255,255,255,0.5);
+            border: 1px solid transparent;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            resize: none;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .notes-area:focus {
+            background: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Modals / Inputs */
+        .input-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-row input {
+            flex-grow: 1;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            outline: none;
+        }
+
+        .delete-btn {
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 5px;
+        }
+        .delete-btn:hover { color: var(--danger-color); }
+        
+        .empty-state {
+            text-align: center;
+            color: var(--text-light);
+            margin-top: 2rem;
+            font-style: italic;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <h1 id="welcomeMsg">Welcome User</h1>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+
+        <!-- NEW: Missed Items Banner (In the middle) -->
+        <div class="missed-container" id="missedItemsContainer">
+            <div class="missed-header">
+                <div class="missed-title">
+                    <i class="fas fa-exclamation-circle"></i> 
+                    <span id="missedTitleText">You have pending tasks from previous days</span>
+                </div>
+                <button class="close-missed-btn" onclick="document.getElementById('missedItemsContainer').style.display='none'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="missed-list" id="missedItemsList">
+                <!-- Items injected via JS -->
+            </div>
+        </div>
+
+        <div class="grid-container">
+            
+            <!-- Tile 1: Calendar -->
+            <div class="tile">
+                <div class="tile-header">
+                    <div class="tile-title">
+                        <i class="far fa-calendar-alt"></i> Calendar
+                    </div>
+                    <!-- 'Add' button here acts as a 'Go to Today' or 'Picker' -->
+                    <button class="add-btn" title="Go to Today" onclick="resetCalendar()">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                </div>
+                
+                <div class="calendar-header">
+                    <button class="month-nav" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <h3 id="currentMonthDisplay">Month Year</h3>
+                    <button class="month-nav" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                
+                <div class="calendar-grid">
+                    <div class="calendar-day-name">Sun</div>
+                    <div class="calendar-day-name">Mon</div>
+                    <div class="calendar-day-name">Tue</div>
+                    <div class="calendar-day-name">Wed</div>
+                    <div class="calendar-day-name">Thu</div>
+                    <div class="calendar-day-name">Fri</div>
+                    <div class="calendar-day-name">Sat</div>
+                </div>
+                <div class="calendar-grid" id="calendarDays">
+                    <!-- Days generated by JS -->
+                </div>
+                <div style="margin-top: auto; padding-top: 1rem; text-align: center; font-size: 0.9rem; color: var(--text-light);">
+                    Selected: <span id="selectedDateDisplay" style="font-weight: bold; color: var(--primary-color);">Today</span>
+                </div>
+            </div>
+
+            <!-- Tile 2: Events (What happens today) -->
+            <div class="tile">
+                <div class="tile-header">
+                    <div class="tile-title">
+                        <i class="far fa-clock"></i> Daily Agenda
+                    </div>
+                    <!-- Toggles input field -->
+                    <button class="add-btn" onclick="toggleInput('eventInputRow')">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <div class="input-row" id="eventInputRow" style="display: none;">
+                    <input type="time" id="newEventTime" style="width: 100px;">
+                    <input type="text" id="newEventText" placeholder="Event description...">
+                    <button class="add-btn" onclick="addEvent()"><i class="fas fa-check"></i></button>
+                </div>
+
+                <div class="list-container" id="eventsList">
+                    <!-- Events items -->
+                </div>
+            </div>
+
+            <!-- Tile 3: Tasks (Checklist) -->
+            <div class="tile">
+                <div class="tile-header">
+                    <div class="tile-title">
+                        <i class="fas fa-tasks"></i> Tasks
+                    </div>
+                    <button class="add-btn" onclick="toggleInput('taskInputRow')">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <div class="input-row" id="taskInputRow" style="display: none;">
+                    <input type="text" id="newTaskText" placeholder="New task...">
+                    <button class="add-btn" onclick="addTask()"><i class="fas fa-check"></i></button>
+                </div>
+
+                <div class="list-container" id="tasksList">
+                    <!-- Task items -->
+                </div>
+            </div>
+
+            <!-- Tile 4: Notes -->
+            <div class="tile">
+                <div class="tile-header">
+                    <div class="tile-title">
+                        <i class="far fa-sticky-note"></i> Daily Notes
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--success-color); opacity: 0; transition: opacity 0.5s;" id="saveIndicator">
+                        <i class="fas fa-check-circle"></i> Saved
+                    </div>
+                </div>
+                <textarea class="notes-area" id="notesArea" placeholder="Write your thoughts for this day..."></textarea>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- 1. State Management & Auth ---
+        
+        let currentUser = JSON.parse(localStorage.getItem('demoUser'));
+        
+        // Basic Auth Guard
+        if (!currentUser) {
+            // For demo purposes, if no user found, create a dummy one or redirect
+            // window.location.href = 'login.html'; // Uncomment this for real linking
+            currentUser = { name: "Guest User", email: "guest@example.com" };
+        }
+
+        document.getElementById('welcomeMsg').innerText = `Welcome, ${currentUser.name}`;
+
+        // Data Storage Structure: { "YYYY-MM-DD": { events: [], tasks: [], notes: "" } }
+        let appData = JSON.parse(localStorage.getItem(`dashboardData_${currentUser.email}`)) || {};
+        
+        let currentDate = new Date();
+        let selectedDate = new Date(); // The date user clicked on
+
+        // --- 2. Calendar Logic ---
+
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        function renderCalendar() {
+            const container = document.getElementById('calendarDays');
+            container.innerHTML = '';
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById('currentMonthDisplay').innerText = `${monthNames[month]} ${year}`;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const lastDay = new Date(year, month + 1, 0).getDate();
+
+            // Empty slots for previous month
+            for (let i = 0; i < firstDayIndex; i++) {
+                const div = document.createElement('div');
+                container.appendChild(div);
+            }
+
+            // Days
+            for (let i = 1; i <= lastDay; i++) {
+                const div = document.createElement('div');
+                div.innerText = i;
+                div.classList.add('calendar-day');
+
+                // Generate date string for comparison keys
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+
+                // Check if this date equals selectedDate
+                if (
+                    i === selectedDate.getDate() && 
+                    month === selectedDate.getMonth() && 
+                    year === selectedDate.getFullYear()
+                ) {
+                    div.classList.add('active');
+                }
+
+                // Visual indicator if date has data
+                if (appData[dateKey] && (appData[dateKey].events?.length > 0 || appData[dateKey].tasks?.length > 0 || appData[dateKey].notes)) {
+                    div.classList.add('has-data');
+                }
+
+                div.onclick = () => selectDate(new Date(year, month, i));
+                container.appendChild(div);
+            }
+        }
+
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function resetCalendar() {
+            currentDate = new Date();
+            selectDate(new Date());
+        }
+
+        function selectDate(date) {
+            selectedDate = date;
+            
+            // Format for display
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('selectedDateDisplay').innerText = selectedDate.toLocaleDateString(undefined, options);
+
+            // Re-render calendar to update "active" class
+            renderCalendar();
+            
+            // Load Data for other tiles
+            loadDashboardData();
+        }
+
+        // --- 3. Dashboard Data Logic ---
+
+        function getSelectedDateKey() {
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function saveData() {
+            localStorage.setItem(`dashboardData_${currentUser.email}`, JSON.stringify(appData));
+            renderCalendar(); // Update dots
+            checkMissedTasks(); // Re-check missed tasks on save
+        }
+
+        function loadDashboardData() {
+            const key = getSelectedDateKey();
+            const dayData = appData[key] || { events: [], tasks: [], notes: "" };
+
+            // Render Events
+            const eventsList = document.getElementById('eventsList');
+            eventsList.innerHTML = '';
+            if (dayData.events.length === 0) {
+                eventsList.innerHTML = '<div class="empty-state">No events planned</div>';
+            } else {
+                dayData.events.forEach((evt, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'list-item';
+                    div.innerHTML = `
+                        <div>
+                            <strong style="color:var(--primary-color)">${evt.time}</strong> 
+                            <span>${evt.text}</span>
+                        </div>
+                        <i class="fas fa-trash delete-btn" onclick="deleteEvent(${index})"></i>
+                    `;
+                    eventsList.appendChild(div);
+                });
+            }
+
+            // Render Tasks
+            const tasksList = document.getElementById('tasksList');
+            tasksList.innerHTML = '';
+            if (dayData.tasks.length === 0) {
+                tasksList.innerHTML = '<div class="empty-state">No tasks added</div>';
+            } else {
+                dayData.tasks.forEach((task, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'list-item';
+                    div.innerHTML = `
+                        <div style="display:flex; align-items:center; width:100%">
+                            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})">
+                            <span class="task-text">${task.text}</span>
+                        </div>
+                        <i class="fas fa-trash delete-btn" onclick="deleteTask(${index})"></i>
+                    `;
+                    tasksList.appendChild(div);
+                });
+            }
+
+            // Render Notes
+            document.getElementById('notesArea').value = dayData.notes || "";
+        }
+
+        // --- 4. Interactive Functions (Add/Remove) ---
+
+        function toggleInput(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        // Events
+        function addEvent() {
+            const time = document.getElementById('newEventTime').value;
+            const text = document.getElementById('newEventText').value;
+            if (!time || !text) return;
+
+            const key = getSelectedDateKey();
+            if (!appData[key]) appData[key] = { events: [], tasks: [], notes: "" };
+            
+            appData[key].events.push({ time, text });
+            appData[key].events.sort((a, b) => a.time.localeCompare(b.time)); // Sort by time
+            
+            saveData();
+            loadDashboardData();
+            
+            // Reset input
+            document.getElementById('newEventText').value = '';
+            document.getElementById('eventInputRow').style.display = 'none';
+        }
+
+        function deleteEvent(index) {
+            const key = getSelectedDateKey();
+            appData[key].events.splice(index, 1);
+            saveData();
+            loadDashboardData();
+        }
+
+        // Tasks
+        function addTask() {
+            const text = document.getElementById('newTaskText').value;
+            if (!text) return;
+
+            const key = getSelectedDateKey();
+            if (!appData[key]) appData[key] = { events: [], tasks: [], notes: "" };
+
+            appData[key].tasks.push({ text, completed: false });
+            
+            saveData();
+            loadDashboardData();
+
+            document.getElementById('newTaskText').value = '';
+            document.getElementById('taskInputRow').style.display = 'none';
+        }
+
+        function toggleTask(index) {
+            const key = getSelectedDateKey();
+            appData[key].tasks[index].completed = !appData[key].tasks[index].completed;
+            saveData();
+            loadDashboardData();
+        }
+
+        function deleteTask(index) {
+            const key = getSelectedDateKey();
+            appData[key].tasks.splice(index, 1);
+            saveData();
+            loadDashboardData();
+        }
+
+        // Notes Auto-save
+        let notesTimeout;
+        document.getElementById('notesArea').addEventListener('input', (e) => {
+            clearTimeout(notesTimeout);
+            notesTimeout = setTimeout(() => {
+                const key = getSelectedDateKey();
+                if (!appData[key]) appData[key] = { events: [], tasks: [], notes: "" };
+                appData[key].notes = e.target.value;
+                saveData();
+                
+                // Show saved indicator
+                const indicator = document.getElementById('saveIndicator');
+                indicator.style.opacity = 1;
+                setTimeout(() => indicator.style.opacity = 0, 1500);
+            }, 500); // Save after 500ms of no typing
+        });
+
+        // Logout
+        function logout() {
+            if(confirm("Are you sure you want to logout?")) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // --- 5. Missed Items Check (NEW) ---
+        function checkMissedTasks() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Start of today (midnight)
+            
+            const missedContainer = document.getElementById('missedItemsContainer');
+            const missedList = document.getElementById('missedItemsList');
+            const missedTitle = document.getElementById('missedTitleText');
+            
+            missedList.innerHTML = '';
+            let count = 0;
+
+            // Sort keys so oldest dates appear first
+            const sortedKeys = Object.keys(appData).sort();
+
+            sortedKeys.forEach(key => {
+                // Parse key YYYY-MM-DD
+                const parts = key.split('-');
+                const itemDate = new Date(parts[0], parts[1] - 1, parts[2]);
+                
+                // If date is strictly in the past (before today)
+                if (itemDate < today) {
+                    const tasks = appData[key].tasks || [];
+                    tasks.forEach(task => {
+                        if (!task.completed) {
+                            count++;
+                            const div = document.createElement('div');
+                            div.className = 'missed-item';
+                            // Format date for display
+                            const displayDate = itemDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                            
+                            div.innerHTML = `
+                                <span>${task.text}</span>
+                                <span class="missed-date-badge">${displayDate}</span>
+                            `;
+                            missedList.appendChild(div);
+                        }
+                    });
+                }
+            });
+
+            if (count > 0) {
+                missedTitle.innerText = `You have ${count} pending task${count > 1 ? 's' : ''} from previous days`;
+                missedContainer.style.display = 'block';
+            } else {
+                missedContainer.style.display = 'none';
+            }
+        }
+
+        // --- 6. Particle Background ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particlesArray;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.directionX = (Math.random() * 0.4) - 0.2;
+                this.directionY = (Math.random() * 0.4) - 0.2;
+                this.size = Math.random() * 2 + 1;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
+                if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) + 
+                                   ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    if (distance < (canvas.width/7) * (canvas.height/7)) {
+                        opacityValue = 1 - (distance / 20000);
+                        ctx.strokeStyle = 'rgba(255, 255, 255,' + opacityValue * 0.15 + ')';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateParticles() {
+            requestAnimationFrame(animateParticles);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            connect();
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        // Initialize
+        initParticles();
+        animateParticles();
+        resetCalendar(); // Sets to today and loads data
+        checkMissedTasks(); // Initial check for missed tasks
+
+    </script>
+</body>
+</html>

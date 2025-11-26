@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Modern Login</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-color: #1f2937;
+            --text-light: #6b7280;
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --card-border: rgba(255, 255, 255, 0.6);
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --error-color: #ef4444;
+            --success-color: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            /* Deep, stylish gradient base */
+            background: radial-gradient(circle at center, #2b32b2, #1488cc);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Canvas for Particle Background */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 10;
+            background-color: var(--card-bg);
+            /* Advanced Glassmorphism */
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            padding: 3rem;
+            border-radius: 1.5rem;
+            border: 1px solid var(--card-border);
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.2),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            /* 3D Transform base */
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            will-change: transform;
+        }
+
+        /* Inner shine effect for 3D feel */
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 1.5rem;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .logo-icon {
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        h2 {
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            margin-bottom: 2.5rem;
+            font-size: 0.95rem;
+        }
+
+        /* Floating Label & Input Styling */
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+            position: relative;
+        }
+
+        .input-wrapper {
+            position: relative;
+            height: 56px; /* Fixed height for consistency */
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            height: 100%;
+            padding: 1.25rem 2.5rem 0.25rem 3rem; /* Top padding for label space */
+            background: var(--input-bg);
+            border: 2px solid transparent;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Icon Styling */
+        .input-wrapper .icon {
+            position: absolute;
+            left: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 1.1rem;
+            transition: 0.3s;
+            pointer-events: none;
+        }
+
+        .input-wrapper input:focus ~ .icon {
+            color: var(--primary-color);
+        }
+
+        /* Floating Label Logic */
+        .input-wrapper label {
+            position: absolute;
+            left: 3rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-size: 1rem;
+            pointer-events: none;
+            transition: 0.25s ease all;
+            transform-origin: left top;
+        }
+
+        /* Move label up when focused or has value */
+        .input-wrapper input:focus ~ label,
+        .input-wrapper input:not(:placeholder-shown) ~ label {
+            top: 12px;
+            transform: translateY(0) scale(0.75);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Toggle Password Button */
+        .toggle-password {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s;
+            z-index: 5;
+        }
+        
+        .toggle-password:hover {
+            color: var(--primary-color);
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            color: var(--text-light);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .remember-me input {
+            margin-right: 0.5rem;
+            accent-color: var(--primary-color);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .forgot-password {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .forgot-password::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--primary-color);
+            transition: width 0.3s;
+        }
+
+        .forgot-password:hover::after {
+            width: 100%;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .submit-btn:active {
+            transform: translateY(1px);
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 2rem 0;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .divider span {
+            padding: 0 1rem;
+            background: transparent;
+        }
+
+        .social-login {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.8rem;
+            border: 1px solid transparent;
+            border-radius: 0.75rem;
+            background: rgba(255,255,255,0.6);
+            color: var(--text-color);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .social-btn:hover {
+            background-color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .social-btn i {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .social-btn.google i { color: #DB4437; }
+        .social-btn.facebook i { color: #4267B2; }
+
+        .signup-link {
+            margin-top: 2rem;
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+
+        .signup-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Message Box */
+        #message-box {
+            height: 0;
+            overflow: hidden;
+            transition: height 0.3s ease, margin-top 0.3s ease;
+            text-align: left;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        #message-box.visible {
+            height: auto;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border: 1px solid transparent;
+        }
+
+        .success-msg {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border-color: #a7f3d0 !important;
+        }
+        .error-msg {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Particle Background Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="login-container" id="loginCard">
+        <div class="logo-icon">
+            <i class="fas fa-meteor"></i>
+        </div>
+        <h2>Welcome Back</h2>
+        <p class="subtitle">Enter your credentials to access your account</p>
+
+        <form id="loginForm" novalidate>
+            <!-- Email Input with Floating Label -->
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <input type="email" id="email" required autocomplete="off" placeholder=" ">
+                    <label for="email">Email Address</label>
+                    <i class="fas fa-envelope icon"></i>
+                </div>
+            </div>
+
+            <!-- Password Input with Floating Label & Toggle -->
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <input type="password" id="password" required placeholder=" ">
+                    <label for="password">Password</label>
+                    <i class="fas fa-lock icon"></i>
+                    <i class="far fa-eye toggle-password" id="togglePassword"></i>
+                </div>
+            </div>
+
+            <div class="actions">
+                <label class="remember-me">
+                    <input type="checkbox">
+                    <span>Remember me</span>
+                </label>
+                <a href="#" class="forgot-password">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <span class="btn-text">Sign In</span>
+                <div class="spinner"></div>
+            </button>
+            
+            <div id="message-box"></div>
+        </form>
+
+        <div class="divider">
+            <span>Or continue with</span>
+        </div>
+
+        <div class="social-login">
+            <button class="social-btn google">
+                <i class="fab fa-google"></i> Google
+            </button>
+            <button class="social-btn facebook">
+                <i class="fab fa-facebook-f"></i> Facebook
+            </button>
+        </div>
+
+        <p class="signup-link">
+            Don't have an account? <a href="signup.html">Sign up here</a>
+        </p>
+
+    </div>
+
+    <script>
+        /**
+         * 1. 3D TILT EFFECT
+         */
+        const card = document.getElementById('loginCard');
+
+        document.addEventListener('mousemove', (e) => {
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+        
+        // Reset tilt on mouse leave
+        document.addEventListener('mouseleave', () => {
+             card.style.transform = `rotateY(0deg) rotateX(0deg)`;
+             card.style.transition = 'all 0.5s ease';
+        });
+
+        document.addEventListener('mouseenter', () => {
+             card.style.transition = 'none';
+        });
+
+
+        /**
+         * 2. PARTICLE BACKGROUND SYSTEM
+         */
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particlesArray;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.directionX = (Math.random() * 0.4) - 0.2;
+                this.directionY = (Math.random() * 0.4) - 0.2;
+                this.size = Math.random() * 2 + 1;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
+                if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) + 
+                                   ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    if (distance < (canvas.width/7) * (canvas.height/7)) {
+                        opacityValue = 1 - (distance / 20000);
+                        ctx.strokeStyle = 'rgba(255, 255, 255,' + opacityValue * 0.15 + ')';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateParticles() {
+            requestAnimationFrame(animateParticles);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            connect();
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        initParticles();
+        animateParticles();
+
+
+        /**
+         * 3. FORM LOGIC (Validation, Toggle Password, Mock Login)
+         */
+        const form = document.getElementById('loginForm');
+        const btn = document.getElementById('submitBtn');
+        const btnText = btn.querySelector('.btn-text');
+        const spinner = btn.querySelector('.spinner');
+        const messageBox = document.getElementById('message-box');
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        // Toggle Password Visibility
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            messageBox.className = '';
+            messageBox.classList.remove('visible');
+            card.classList.remove('shake');
+
+            const email = document.getElementById('email').value;
+            const password = passwordInput.value;
+
+            // Retrieve stored user data
+            const storedUser = JSON.parse(localStorage.getItem('demoUser'));
+
+            void card.offsetWidth; // Trigger reflow for animation
+
+            // Check if stored credentials match input
+            if (storedUser && email === storedUser.email && password === storedUser.password) {
+                // Success - Loading State
+                btnText.style.display = 'none';
+                spinner.style.display = 'block';
+                btn.disabled = true;
+
+                // Simulate API Call
+                setTimeout(() => {
+                    messageBox.innerText = `Welcome back, ${storedUser.name}!`;
+                    messageBox.className = 'success-msg visible';
+                    
+                    setTimeout(() => {
+                        // Redirect to dashboard
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                }, 1500);
+
+            } else {
+                // Error State
+                card.classList.add('shake');
+                messageBox.innerText = 'Invalid email or password.';
+                messageBox.className = 'error-msg visible';
+            }
+        });
+
+        card.addEventListener('animationend', () => {
+            card.classList.remove('shake');
+        });
+    </script>
+</body>
+</html>
